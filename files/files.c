@@ -158,6 +158,44 @@ void findSmallestCSVFile(char* shortestFileName)
 	closedir(currDir);
 }
 
+bool findSpecifiedFile(char* specifiedFileName)
+{
+	DIR* currDir = opendir(".");
+	struct dirent* aDir;
+	struct stat dirStat;
+	char tempFileName[256];
+	strcpy(tempFileName, specifiedFileName);
+	bool fileFound = false;
+
+	if (currDir == NULL)
+	{
+		printf("directory did not open");
+	}
+
+	//// Go through all the entries
+	while ((aDir = readdir(currDir)) != NULL) {
+		// Get meta-data for the current entry
+		stat(aDir->d_name, &dirStat);
+
+		if (strcmp(aDir->d_name, tempFileName) == 0)
+		{
+			fileFound = true;
+			return true;
+		}
+	}
+
+	if (fileFound == false)
+	{
+		int userInput2;
+		printf("Sorry, your file was not found, please pick again\n");
+		userInput2 = promptUserInput2();
+		evaluateUserInput2(userInput2);
+	}
+		
+	closedir(currDir);
+	return true;
+}
+
 /// <summary>
 /// Try to figure out how to get this to work. sizes are swapped?
 /// </summary>
@@ -243,7 +281,12 @@ int processLargestFile()
 
 int processSpecifiedFile()
 {
-	
+	char specificFileName[256];
+	getSpecifiedFile(specificFileName);
+	if (findSpecifiedFile(specificFileName))
+	{
+		printf("Now processing the chosen file named %s", specificFileName);
+	}
 	return 0;
 }
 
@@ -302,5 +345,9 @@ int promptUserInput2()
 
 }
 
-
+void getSpecifiedFile(char* fileName)
+{
+	printf("what file do you want processed?");
+	scanf("%s", fileName);
+}
 

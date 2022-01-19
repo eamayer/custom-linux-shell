@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 //----------------------------------------------------
 /*Constant Values*/
@@ -27,6 +28,8 @@ void exitProgram();
 void findLargestCSVFile(char* nameholder);
 void findSmallestCSVFile(char* nameholder);
 void findSizedCSVFile(char* shortestFileName, char sizeRequirement);
+bool findSpecifiedFile(char* specifiedFileName);
+void getSpecifiedFile();
 int getUserInput1();
 int getUserInput2();
 int processSmallestFile();
@@ -37,6 +40,7 @@ int promptUserInput2();
 
 void printOptions1();
 void printOptions2();
+
 
 
 #endif // !FILES_H_
