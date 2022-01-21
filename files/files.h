@@ -37,16 +37,15 @@ typedef struct Movie
 #ifndef FILES_H_
 #define FILES_H_ 
 
+void commonFileProcesses(Movie* list);
 Movie* createNewMovieNode(char* currLinePointer);
 void evaluateUserInput1(int userInput1);
-void evaluateUserInput2(int userInput2);
+Movie* evaluateUserInput2(int userInput2);
 void exitProgram();
-int findEarliestYearInList(Movie* list);
-void findLargestCSVFile(char* shortestFileName);
-void findSmallestCSVFile(char* shortestFileName);
 void findSizedCSVFile(char* shortestFileName, char sizeRequirement);
 bool findSpecifiedFile(char* specifiedFileName);
 void fileNotFound();
+void freeTheNodes(Movie* list);
 void getSpecifiedFile(char* fileName);
 int getUserInput1();
 int getUserInput2();
@@ -55,9 +54,9 @@ long int generateRandomNumber();
 void generateTextFilesForReleaseYears(Movie* list);
 void makeNewDir(char* directoryName);
 Movie* processList(char* filePath);
-int processSmallestFile();
-int processLargestFile();
-int processSpecifiedFile();
+Movie* processSmallestFile();
+Movie* processLargestFile();
+Movie* processSpecifiedFile();
 int promptUserInput1();
 int promptUserInput2();
 void printOptions1();

@@ -21,25 +21,48 @@ Entry point into program. Takes file provided, processes and retrung informaiton
 */
 
 int main()
+
 {
 	int userInput1 = NULL;
-
+	Movie* pointer;
 	//takes the movie list provided as a file, processes it into a linked list
-	//Movie* list = processList(argv[1])
 
-	do
-	{
+
+	
+		//Movie* list = processList("movies_sample_smallest.csv");
+	do {
+	
 		userInput1 = promptUserInput1();
 		evaluateUserInput1(userInput1);
 		int userInput2 = promptUserInput2();
-		evaluateUserInput2(userInput2);
+		pointer = evaluateUserInput2(userInput2);
+		freeTheNodes(pointer);
 	} while (userInput1 != 2);
+
 
 	exitProgram();
 	return 0;
 }
 
 
+/// CODE CITATION: Code is based on: 
+/// SITE: https://codeforwin.org/2015/09/c-program-to-delete-all-nodes-of-singly-linked-list.html
+/// AUTHOR: Pankaj
+/// DATE: 20Jan2022
+void freeTheNodes(Movie* list)
+{	
+	Movie* temp ;
+
+	while (list != NULL)
+	{
+		temp = list;
+		list = list->next;
+		free(temp->languages);
+		free(temp->title);
+		free(temp);
+	}
+	list = NULL;
+}
 
 // Purpose: creates a new Movie node
 // 
@@ -52,11 +75,10 @@ Movie* createNewMovieNode(char* currLinePointer) {
 	Movie* currMovie = malloc(sizeof(Movie));
 
 	char* saveptr;
-	char* tokenptr;
 
 	if (currMovie != NULL)
 	{
-		tokenptr = strtok_r(currLinePointer, ",", &saveptr);
+		char* tokenptr = strtok_r(currLinePointer, ",", &saveptr);
 		//allocating the space
 		currMovie->title = calloc(strlen(tokenptr) + 1, sizeof(char));
 		strcpy(currMovie->title, tokenptr);
@@ -77,15 +99,64 @@ Movie* createNewMovieNode(char* currLinePointer) {
 	else printf("Error, Can't create new movie node\n");
 
 	currMovie->next = NULL;
+
 	return currMovie;
+}
+
+
+//Citation for the following function:
+//Date 10Jan2022
+//Based on: OSU CS 344 Instructors Assignment 1 Students example
+//Source URL: https://replit.com/@cs344/studentsc#main.c
+
+Movie* processList(char* filePath)
+{
+	FILE* movieFile = fopen(filePath, "r");
+
+	//create variables to read line by line
+	int currLineNumber = -1;
+	char* currLinePointer = NULL;
+	size_t buffer_size = 0;
+	ssize_t nread;
+
+	//create linked list pointer
+	Movie* head = NULL;
+	Movie* tail = NULL;
+
+	if (movieFile == 0) {
+		printf("File will not open!\n");
+		exit(EXIT_FAILURE);
+	}
+
+	while ((nread = getline(&currLinePointer, &buffer_size, movieFile)) != -1) {
+		if (currLineNumber != -1)  //checking if not header line
+		{
+			Movie* newMovieNode = createNewMovieNode(currLinePointer);
+
+			if (head == NULL)
+			{
+				head = newMovieNode;
+				tail = newMovieNode;
+			}
+			else
+			{
+				tail->next = newMovieNode;
+				tail = newMovieNode;
+			}
+		}
+		currLineNumber++;
+	}
+	free(currLinePointer);
+	fclose(movieFile);
+	printf("\n Processed file %s and parsed data for %d movies\n", filePath, currLineNumber);
+	return head;
 }
 
 
 void evaluateUserInput1(int userInput1)
 {
 	switch (userInput1) {
-	case 1: //user wants to select a file to process
-		
+	case 1:; //user wants to select a file to process
 		break;
 
 	case 2: //user wants to exit
@@ -94,22 +165,24 @@ void evaluateUserInput1(int userInput1)
 	}
 }
 
-void evaluateUserInput2(int userInput2)
+Movie* evaluateUserInput2(int userInput2)
 {
-	switch (userInput2) {
-	case 1: //process largest file
-		processLargestFile();
-		break;
+	Movie* pointer;
 
-	case 2: //process smallest file
-		processSmallestFile();
-		break;
-
-	case 3: //specify file name to process
-		processSpecifiedFile();
-		break;
-
+	if (userInput2 == 1)
+	{
+		pointer = processLargestFile();
 	}
+	else if (userInput2 == 2)
+	{
+		pointer = processSmallestFile();
+	}
+	else if (userInput2 == 3)
+	{
+		pointer = processSpecifiedFile();
+	}
+
+	return pointer;
 }
 
 void exitProgram()
@@ -123,23 +196,6 @@ void fileNotFound()
 	printf("Sorry, your file was not found, please pick again\n");
 	userInput2 = promptUserInput2();
 	evaluateUserInput2(userInput2);
-}
-
-int findEarliestYearInList(Movie* list)
-{
-	int earliestYear = list->year; /*set earliest year to first movie in list*/
-
-	while (list != NULL)
-	{
-		int movieYear = list->year;
-
-		if (movieYear < earliestYear)
-		{
-			earliestYear = movieYear;
-		}
-		list = list->next;
-	}
-	return earliestYear;
 }
 
 bool findSpecifiedFile(char* specifiedFileName)
@@ -164,7 +220,6 @@ bool findSpecifiedFile(char* specifiedFileName)
 		if (strcmp(aDir->d_name, tempFileName) == 0)
 		{
 			fileFound = true;
-			return true;
 		}
 	}
 
@@ -174,87 +229,10 @@ bool findSpecifiedFile(char* specifiedFileName)
 	}
 		
 	closedir(currDir);
+
 	return true;
 }
 
-
-//CITE THE HW
-void findLargestCSVFile(char* longestFileName)
-{
-	DIR* currDir = opendir(".");
-	struct dirent* aDir;
-	struct stat dirStat;
-	long int longestFileLength = 0;
-
-	if (currDir == NULL)
-	{
-		printf("directory did not open");
-	}
-
-	//// Go through all the entries
-	while ((aDir = readdir(currDir)) != NULL) {
-
-		int lengthOfName = strlen(aDir->d_name);
-		char* fileType;
-
-		if (lengthOfName >= 3)
-		{
-			fileType = &aDir->d_name[lengthOfName - 4];
-		}
-
-		if ((strcmp(SUFFIX, fileType) == 0) && (strncmp(PREFIX, aDir->d_name, strlen(PREFIX)) == 0))
-		{
-			// Get meta-data for the current entry
-			stat(aDir->d_name, &dirStat);
-
-			if (dirStat.st_size > longestFileLength) {
-				longestFileLength = dirStat.st_size;
-				//memset(longestFileName, '\0', sizeof(aDir->d_name));
-				strcpy(longestFileName, aDir->d_name);
-			}
-		}
-	}
-	closedir(currDir);
-}
-
-
-//CITE THE HW
-void findSmallestCSVFile(char* shortestFileName)
-{
-	DIR* currDir = opendir(".");
-	struct dirent* aDir;
-	struct stat dirStat;
-	long int shortestFileLength = 2147483647;
-
-	if (currDir == NULL)
-	{
-		printf("directory did not open");
-	}
-
-	//// Go through all the entries
-	while ((aDir = readdir(currDir)) != NULL) {
-
-		int lengthOfName = strlen(aDir->d_name);
-		char* fileType;
-
-		if (lengthOfName >= 3)
-		{
-			fileType = &aDir->d_name[lengthOfName - 4];
-		}
-
-		if ((strcmp(SUFFIX, fileType) == 0) && (strncmp(PREFIX, aDir->d_name, strlen(PREFIX)) == 0))
-		{
-			// Get meta-data for the current entry
-			stat(aDir->d_name, &dirStat);
-
-			if (dirStat.st_size < shortestFileLength) {
-				shortestFileLength = dirStat.st_size;
-				strcpy(shortestFileName, aDir->d_name);
-			}
-		}
-	}
-	closedir(currDir);
-}
 
 /// <summary>
 /// CITE HW
@@ -276,9 +254,12 @@ void findSizedCSVFile(char* fileName, char sizeRequirement)
 	}
 
 	//// Go through all the entries
-	while ((aDir = readdir(currDir)) != NULL) {
-
-		if ((strncmp(PREFIX, aDir->d_name, strlen(PREFIX)) == 0) && ((strstr(SUFFIX, aDir->d_name) == 0)))
+	while ((aDir = readdir(currDir)) != NULL)
+	{
+		
+		char* compareForSufffix;
+		compareForSufffix = strrchr(aDir->d_name, '.');
+		if (strncmp(PREFIX, aDir->d_name, strlen(PREFIX)) == 0 && strcmp(SUFFIX, compareForSufffix) == 0)
 		{
 			// Get meta-data for the current entry
 			stat(aDir->d_name, &dirStat);
@@ -299,12 +280,6 @@ void findSizedCSVFile(char* fileName, char sizeRequirement)
 	closedir(currDir);
 }
 
-
-void getSpecifiedFile(char* fileName)
-{
-	printf("what file do you want processed?");
-	scanf("%s", fileName);
-}
 
 
 int getUserInput1()
@@ -340,6 +315,7 @@ void generateTextFilesForReleaseYears(Movie* list) {
 		char* movieTitle = calloc(strlen(list->title) + 2, sizeof(char));
 		strcpy(movieTitle, list->title);
 		strcat(movieTitle, "\n");
+
 		generateFileName(fileName, movieYear);
 
 		file_descriptor = open(fileName, O_RDWR | O_CREAT | O_APPEND, 0640);
@@ -351,12 +327,14 @@ void generateTextFilesForReleaseYears(Movie* list) {
 		write(file_descriptor, movieTitle, strlen(movieTitle));
 
 		close(file_descriptor);
+
 		free(movieTitle);
-	
-		list = list->next;
+
+		list=list->next;
+
+		
 	}
 }
-
 
 /// <summary>
 ///  generates random number between 0 and 99999 (inclusive).
@@ -393,6 +371,7 @@ void makeNewDir(char* directoryName)
 	strcpy(directoryName, "mayerel.movies.");
 
 	randomNumber = generateRandomNumber();
+
 	sprintf(stringRandomNumber, "%ld", randomNumber);
 
 	strcat(directoryName, stringRandomNumber);
@@ -400,96 +379,60 @@ void makeNewDir(char* directoryName)
 	mkdir(directoryName, 0750);
 }
 
-//Citation for the following function:
-//Date 10Jan2022
-//Based on: OSU CS 344 Instructors Assignment 1 Students example
-//Source URL: https://replit.com/@cs344/studentsc#main.c
-
-Movie* processList(char* filePath)
-{
-	FILE* movieFile = fopen(filePath, "r");
-
-	//create variables to read line by line
-	int currLineNumber = -1;
-	char* currLinePointer = NULL;
-	size_t buffer_size = 0;
-
-	//create linked list pointer
-	Movie* head = NULL;
-	Movie* tail = NULL;
-
-	if (movieFile == 0) {
-		printf("File will not open!\n");
-		exit(EXIT_FAILURE);
-	}
-
-	while (getline(&currLinePointer, &buffer_size, movieFile) != -1) {
-		if (currLineNumber != -1)  //checking if not header line
-		{
-			Movie* newMovieNode = createNewMovieNode(currLinePointer);
-
-			if (head == NULL)
-			{
-				head = newMovieNode;
-				tail = newMovieNode;
-			}
-			else
-			{
-				tail->next = newMovieNode;
-				tail = newMovieNode;
-			}
-		}
-		currLineNumber++;
-	}
-	free(currLinePointer);
-	fclose(movieFile);
-	printf("\n Processed file %s and parsed data for %d movies\n", filePath, currLineNumber);
-	return head;
-}
 
 //if user picks largest file. The largest file with the extension CSV 
 // in current directory is found. If multiple files have the same size, 
 // pick the largest files that is a CSV and starts with "movies_"
-int processLargestFile()
+Movie* processLargestFile()
 {
 	// find largest file (if ties, print any fi
 	// print name of largest file
-	
+
 	char largestFileName[256];
 	char largest = 'l';
-	char directoryName[256];
 
 	findSizedCSVFile(largestFileName, largest);
 	printf("Now processing the chosen file named %s", largestFileName);
-
 	Movie* list = processList(largestFileName);
+	commonFileProcesses(list);
 
-	makeNewDir(directoryName);
-
-	chdir(directoryName);
-
-	generateTextFilesForReleaseYears(list);
-
-	chdir("..");
-
-	free(list);
-
-	return 0;
+	return list;
 }
 
-int processSpecifiedFile()
+void getSpecifiedFileName(char* fileName)
 {
+	printf("what file do you want processed?");
+	scanf("%s", fileName);
+}
+
+Movie* processSpecifiedFile()
+{
+	
 	char specificFileName[256];
-	getSpecifiedFile(specificFileName);
-	char directoryName[256];
+	getSpecifiedFileName(specificFileName);
+	//char* specificFileName;
+	//size_t buflen;
+	//printf("what file do you want processed?");
+	////scanf("%d*[\n]", &specificFileName);
+	//getline(&specificFileName, &buflen, stdin);
 
 	if (findSpecifiedFile(specificFileName))
 	{
 		printf("Now processing the chosen file named %s", specificFileName);
 	}
 
-
 	Movie* list = processList(specificFileName);
+
+	commonFileProcesses(list);
+
+	return list;
+
+}
+
+void commonFileProcesses(Movie* list)
+{
+
+	char directoryName[256];
 
 	makeNewDir(directoryName);
 
@@ -498,36 +441,21 @@ int processSpecifiedFile()
 	generateTextFilesForReleaseYears(list);
 
 	chdir("..");
-
-	free(list);
-
-	return 0;
 }
 
 // find smallest file (if ties, print any fi
 // print name of largest file
-int processSmallestFile()
+Movie* processSmallestFile()
 {
 	char smallestFileName[256];
 	char smallest = 's';
-	char directoryName[256];
 
 	findSizedCSVFile(smallestFileName, smallest);
 	printf("Now processing the chosen file named %s", smallestFileName);
-
 	Movie* list = processList(smallestFileName);
+	commonFileProcesses(list);
 
-	makeNewDir(directoryName);
-
-	chdir(directoryName);
-
-	generateTextFilesForReleaseYears(list);
-
-	chdir("..");
-
-	free(list);
-
-	return 0;
+	return list;
 }
 
 void printOptions1()
@@ -567,6 +495,5 @@ int promptUserInput2()
 		promptUserInput2();
 	}
 	return userInput2;
-
 }
 
