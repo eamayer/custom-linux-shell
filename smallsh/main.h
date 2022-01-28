@@ -9,12 +9,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 //#include <sys/types.h>
 //#include <dirent.h>
 //#include <sys/types.h>
 //#include <sys/stat.h>
 //#include <time.h>
-#include <unistd.h>
+
 #include <errno.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -28,10 +30,11 @@
 /* struct for movie information*/
 typedef struct Command
 {
-	char* argArray[5];
+	char* argArray[512];
 	char* inputFile;
 	char* outputFile;
 	char* commandCall;
+	int  numOfArgs;
 	bool isBackgroundFlag;
 } Command;
 
@@ -43,33 +46,16 @@ typedef struct Command
 #ifndef FILES_H_
 #define FILES_H_ 
 
-void getCommand();
-void externalProcess(argArray);
-void printArray(char** argArray, int argumentsTotal);
+void changeDir(Command* parsedInt);
 Command* createCommandStruc(char* input);
-//void commonFileProcesses(char* fileName);
-//Movie* createNewMovieNode(char* currLinePointer);
-//void evaluateUserInputMainMenu(int userInput1);
-//void evaluateUserInputSubMenu(int userInput2);
-//void exitProgram();
-//void findSizedLargestOrSmallestFileSize(char* fileName, char sizeRequirement);
-//bool findSpecifiedFile(char* specifiedFileName);
-//void fileNotFound();
-//void freeTheNodes(Movie* list);
-//void generateFileName(char* fileName, int movieYear);
-//int generateRandomNumber();
-//void generateTextFilesForReleaseYears(Movie* list);
-//int getUserInputMainMenu();
-//int getUserInputSubMenu();
-//void makeNewDir(char* directoryName);
-//void printMainMenu();
-//void printSubMenu();
-//Movie* processList(char* filePath);
-//void processLargestFile();
-//void processSmallestFile();
-//void processSpecifiedFile();
-//int promptUserMainMenu();
-//int promptUserSubMenu();
+void exitCommand(Command* parsedInt);
+void freeUp(Command* parsedInput);
+void getCommand();
+int externalProcess(int arg, Command* userInput, int* codeStatus);
+void printArray(char** argArray, int argumentsTotal);
+void processCommand(int arg, Command* userInput, int* codeStatus);
+void status(int codeStatus);
+void redirectionNeeded(Command* userInput);
 
 #endif // !FILES_H_
 
