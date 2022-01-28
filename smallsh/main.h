@@ -51,10 +51,10 @@ Command* createCommandStruc(char* input);
 void exitCommand(Command* parsedInt);
 void freeUp(Command* parsedInput);
 void getCommand();
-int externalProcess(int arg, Command* userInput, int* codeStatus);
+int externalProcess(Command* userInput, int* codeStatus);
 void printArray(char** argArray, int argumentsTotal);
-void processCommand(int arg, Command* userInput, int* codeStatus);
-void status(int codeStatus);
+void processCommand(Command* userInput, int* codeStatus);
+void status(int* codeStatus);
 void redirectionNeeded(Command* userInput);
 
 #endif // !FILES_H_
