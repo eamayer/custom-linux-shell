@@ -357,52 +357,44 @@ void freeUp(Command* parsedInput) {
 /// 
 /// CITATIONS:
 /// while (1) read error check
-/// SOURCE: https://people.gnome.org/~federico/blog/rust-libstd-syscalls-and-errors.html
+/// SOURCE: 
 /// DATE: 06Feb2022
 int getCommand() {
 	char* userInput = malloc(MAX_INPUT_LENGTH * sizeof(char) + 1); //need to set extra length in case of pidExpansion
 	
-
+	// see if any background processes completed before returning control to user
 	checkBackgroundProcesses();
-	//this is needed to avoid a infinite repeat of ":" when the foreground only process is invoked.
-	while (1) {
-		size_t len = 0;
-		ssize_t read;
+	
+	ssize_t read;
 
-		printf(": ");
-		fflush(stdin);
+	printf(": ");
+	fflush(stdin);
 
-		// read gets automatically restarted upon return from a signal handles
-		read = getline(&userInput, &len, stdin);
-		if (read == -1) {
-			if (errno == EINTR)
-			{
-				clearerr(stdin);
-				free(userInput);
-			}
-			else {
-				return -1;
-			}
-		}
-		else
-		{
-			break;
-		}
-	}
-	fflush(stdout);
-
-	if (validateInput(userInput) == false) {
+	// read gets automatically restarted upon return from a signal handles so 
+	// this is needed to avoid a infinite repeat of ":" when the foreground only process is invoked.
+	size_t len = 0;
+	read = getline(&userInput, &len, stdin);
+	if (read == -1) {
+		clearerr(stdin);
 		free(userInput);
 		getCommand();
 	}
 	else {
-		userInput[strlen(userInput) - 1] = '\0'; // remove added '\n' by getline
-		expandPID(userInput);
-		Command* parsedInput = createCommandStruc(userInput);
-		free(userInput);
-		processCommand(parsedInput);
 
-		freeUp(parsedInput);
+		fflush(stdout);
+
+		if (validateInput(userInput) == false) {
+			free(userInput);
+			getCommand();
+		}
+		else {
+			userInput[strlen(userInput) - 1] = '\0'; // remove added '\n' by getline
+			expandPID(userInput);
+			Command* parsedInput = createCommandStruc(userInput);
+			free(userInput);
+			processCommand(parsedInput);
+			freeUp(parsedInput);
+		}	
 	}
 	return 0;
 }
