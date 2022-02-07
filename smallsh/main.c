@@ -1,12 +1,11 @@
 /*Project: Assignment 3
 Class: CS 344 Winter 2022
 Author: Elizabeth Mayer
-Date: 15Jan2022
+Date: 06Feb2022
 
-Description: Program that asks user if they want to select a file to process. They then can choose
-the file they want to process from smallest, largest or specific one they enter. It finds the correct file
-and creates a new directory for it and then processes the file (must be in Movie format) by creating a .txt file
-for movies released in each year. After completion asks user if they would like to process another file
+Description: Program that is a mini shell. Has build in functionality for "cd", "exit" and "status". Redirects everything
+else through execvp. Can handle background and foreground processes. Ctrl+Z makes the background process request ignored.
+Ctrl+C terminates any foreground process.
 */
 
 //----------------------------------------------------
@@ -17,14 +16,18 @@ for movies released in each year. After completion asks user if they would like 
 
 //----------------------------------------------------
 /*Entry point
-Entry point into program. Asks user for input and evaluates it appropriately to ensure
+Entry point into program. Sets up the handlers. Asks user for input and evaluates it appropriately to ensure
 appropriate processing*/
 //----------------------------------------------------
 
 
 int main()
 {
-	getCommand();
+	setHandlers(); // need to be set up once
+	while (1)
+	{
+		getCommand();
+	}
 	return 0;
 }
 
