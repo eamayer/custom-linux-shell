@@ -79,7 +79,8 @@ int codeStatusGlobal = 0;
 //----------------------------------------------------
 
 /// <summary>
-/// Outputs nothing. Purpose is to make having the children not inherit it.
+/// Outputs nothing. Purpose is to make having the children not inherit it due to needing it to interact with
+/// ignoring the background.
 /// </summary>
 /// <param name="sig"></param>
 void handleSIGINT(int sig) {
@@ -496,7 +497,7 @@ void redirectionNeeded(Command* userInput) {
 
 /// <summary>
 /// Set signal handlers for Ctrl+Z and Ctrl+C to be handled via specified handlers. 
-/// Ensures they are not inherited by the childre.
+/// Ensures they are not inherited by the children.
 /// </summary>
 /// CITATION: Adapted how to set signals from: 
 /// SOURCE: OSU CS344 Module 5 Processes II, Exploration: Signal Handling API
