@@ -318,7 +318,7 @@ int externalProcess(Command* userInput) {
 		// run on foreground, wait for child to process. If bad exit, then prints that it was
 		// terminated.
 		if (userInput->background != true || ignoreBackground == true) {
-			spawnPid = waitpid(spawnPid, &codeStatusGlobal, 0);
+			waitpid(spawnPid, &codeStatusGlobal, 0);
 			if (WIFSIGNALED(codeStatusGlobal)) {
 				printf("teminated by signal %d\n", WTERMSIG(codeStatusGlobal));
 				fflush(stdout);
@@ -327,7 +327,7 @@ int externalProcess(Command* userInput) {
 		// runs on background so add to the background process tracker
 		else { 
 			processTracker[numOfProcesses] = spawnPid;
-			printf("process started for child %d \n", spawnPid);
+			printf("background pid is %d \n", spawnPid);
 			fflush(stdout);
 			numOfProcesses++;
 		}
@@ -356,17 +356,17 @@ void freeUp(Command* parsedInput) {
 /// <returns></returns>
 /// 
 /// CITATIONS:
-/// while (1) read error check
-/// SOURCE: 
+/// read == -1 check is adapted from: 
+/// SOURCE: OSU CS344 Module 5 Processes II, Exploration: Signal Handling API
 /// DATE: 06Feb2022
 int getCommand() {
 	char* userInput = malloc(MAX_INPUT_LENGTH * sizeof(char) + 1); //need to set extra length in case of pidExpansion
-	
+	ssize_t read;
+
 	// see if any background processes completed before returning control to user
 	checkBackgroundProcesses();
 	
-	ssize_t read;
-
+	// print prompt for user
 	printf(": ");
 	fflush(stdin);
 
@@ -377,12 +377,11 @@ int getCommand() {
 	if (read == -1) {
 		clearerr(stdin);
 		free(userInput);
+		fflush(stdout);
 		getCommand();
 	}
 	else {
-
 		fflush(stdout);
-
 		if (validateInput(userInput) == false) {
 			free(userInput);
 			getCommand();
@@ -395,8 +394,7 @@ int getCommand() {
 			processCommand(parsedInput);
 			freeUp(parsedInput);
 		}	
-	}
-	return 0;
+	} return 0;
 }
 
 
@@ -411,11 +409,9 @@ void processCommand(Command* userInput) {
 
 	if (strcmp(firstArg, "cd") == 0) {
 		changeDir(userInput);
-		codeStatusGlobal = 0;
 	}
 	else if (strcmp(firstArg, "status") == 0) {
 		statusCheck();
-		codeStatusGlobal = 0;
 	}
 	else if (strcmp(firstArg, "exit") == 0) {
 		exitCommand(userInput);
@@ -435,7 +431,6 @@ void processCommand(Command* userInput) {
 /// DATE: 06Feb2022
 void redirectionNeeded(Command* userInput) {
 	bool background = userInput->background;
-
 	if (userInput->inputFile || background == true) {
 		int sourceFD;
 
@@ -444,7 +439,7 @@ void redirectionNeeded(Command* userInput) {
 			sourceFD = open(userInput->inputFile, O_RDONLY);
 			//error check
 			if (sourceFD == -1) {
-				perror("error opening input file");
+				perror(userInput->inputFile);
 				codeStatusGlobal = 1;
 				exit(1);
 			}
@@ -468,9 +463,8 @@ void redirectionNeeded(Command* userInput) {
 		if (userInput->outputFile) {
 			targetFD = open(userInput->outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 			if (targetFD == -1) {
-				perror("error opening output file");
+				perror(userInput->outputFile);
 				codeStatusGlobal = 1;
-				exit(1);
 			}
 			printf("\n"); // new line
 		}
@@ -502,7 +496,7 @@ void setHandlers() {
 	SIGINT_action.sa_handler = handleSIGINT;
 	/* block all catchables while it is running*/
 	sigfillset(&SIGINT_action.sa_mask);
-	SIGINT_action.sa_flags = 0;
+	SIGINT_action.sa_flags = SA_RESTART;
 	//install out signal handler
 	sigaction(SIGINT, &SIGINT_action, NULL);
 
